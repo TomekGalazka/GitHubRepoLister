@@ -13,8 +13,12 @@ public class GitHubRepoListerService {
 
     private final RestTemplate restTemplate;
 
+    private static final String GITHUB_API_REPOS_URL = "https://api.github.com/users/{username}/repos";
+
     @Autowired
     public GitHubRepoListerService(RestTemplate restTemplate) {
         this.restTemplate = restTemplate;
     }
+
+
 }
