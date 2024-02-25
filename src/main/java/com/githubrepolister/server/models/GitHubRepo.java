@@ -3,6 +3,8 @@ package com.githubrepolister.server.models;
 import java.util.List;
 
 public class GitHubRepo {
+
+    private String name;
     private GitHubRepoOwner owner;
     private List<GitHubRepoBranch> branches;
     private boolean fork;
@@ -11,6 +13,10 @@ public class GitHubRepo {
         this.owner = owner;
         this.branches = branches;
         this.fork = fork;
+    }
+
+    public String getName() {
+        return name;
     }
 
     public GitHubRepoOwner getOwner() {
