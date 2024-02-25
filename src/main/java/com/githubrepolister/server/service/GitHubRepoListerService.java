@@ -6,6 +6,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
@@ -28,6 +31,9 @@ public class GitHubRepoListerService {
     @Value("${github.api.branches-url}")
     private String GITHUB_API_BRANCHES_URL;
 
+    @Value("${github.api.token}")
+    private String githubApiToken;
+
     @Autowired
     public GitHubRepoListerService(RestTemplate restTemplate) {
         this.restTemplate = restTemplate;
@@ -36,7 +42,11 @@ public class GitHubRepoListerService {
     public List<GitHubRepo> getUserRepos(String userName) {
         logger.info("Fetching GitHub repositories for user: {}", userName);
 
-        GitHubRepo[] repos = restTemplate.getForObject(GITHUB_API_REPOS_URL, GitHubRepo[].class, userName);
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("Authorization", "token " + githubApiToken);
+
+        ResponseEntity<GitHubRepo[]> response = restTemplate.exchange(GITHUB_API_REPOS_URL, HttpMethod.GET, new HttpEntity<>(headers), GitHubRepo[].class, userName);
+        GitHubRepo[] repos = response.getBody();
 
         if (repos != null && repos.length > 0) {
             List<GitHubRepo> nonForkedRepos = filteredForkedRepos(Arrays.asList(repos));
@@ -62,8 +72,9 @@ public class GitHubRepoListerService {
     private List<GitHubRepoBranch> fetchBranches(String owner, String repo) {
         logger.info("Fetching branches for repository: {}/{}", owner, repo);
 
-        String branchesUrl = GITHUB_API_BRANCHES_URL.replace("{owner}", owner).replace("{repo}", repo);
-        ResponseEntity<GitHubRepoBranch[]> response = restTemplate.getForEntity(branchesUrl, GitHubRepoBranch[].class);
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("Authorization", "token " + githubApiToken);
+        ResponseEntity<GitHubRepoBranch[]> response = restTemplate.exchange(GITHUB_API_BRANCHES_URL, HttpMethod.GET, new HttpEntity<>(headers), GitHubRepoBranch[].class, owner, repo);
         List<GitHubRepoBranch> branches = Arrays.asList(response.getBody());
 
         logger.info("Fetched {} branches for repository: {}/{}", branches.size(), owner, repo);

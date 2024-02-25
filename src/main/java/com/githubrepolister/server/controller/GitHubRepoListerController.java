@@ -23,7 +23,9 @@ public class GitHubRepoListerController {
     }
 
     @GetMapping("/userRepos/{username}")
-    public ResponseEntity<List<GitHubRepo>> getUserRepos(@PathVariable String username) {
+    public ResponseEntity<List<GitHubRepo>> getUserRepos(@PathVariable("username") String username) {
+        System.out.println("Received request for user: {}" + username);
+
         List<GitHubRepo> repos = gitHubRepoListerService.getUserRepos(username);
         return ResponseEntity.ok(repos);
     }

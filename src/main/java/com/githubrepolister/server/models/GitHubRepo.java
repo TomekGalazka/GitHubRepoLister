@@ -1,7 +1,10 @@
 package com.githubrepolister.server.models;
 
+import lombok.NoArgsConstructor;
+
 import java.util.List;
 
+@NoArgsConstructor
 public class GitHubRepo {
 
     private String name;

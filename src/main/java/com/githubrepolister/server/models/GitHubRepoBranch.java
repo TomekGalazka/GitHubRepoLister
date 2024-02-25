@@ -1,27 +1,31 @@
 package com.githubrepolister.server.models;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 public class GitHubRepoBranch {
     private String name;
-    private String lastCommitSha;
 
-    public GitHubRepoBranch(String name, String lastCommitSha) {
+    @JsonProperty("commit")
+    private GitHubRepoCommit commit;
+
+    public GitHubRepoBranch(String name, GitHubRepoCommit commit) {
         this.name = name;
-        this.lastCommitSha = lastCommitSha;
+        this.commit = commit;
     }
 
     public String getName() {
         return name;
     }
 
-    public String getLastCommitSha() {
-        return lastCommitSha;
+    public GitHubRepoCommit getCommit() {
+        return commit;
     }
 
     public void setName(String name) {
         this.name = name;
     }
 
-    public void setLastCommitSha(String lastCommitSha) {
-        this.lastCommitSha = lastCommitSha;
+    public void setCommit(GitHubRepoCommit commit) {
+        this.commit = commit;
     }
 }

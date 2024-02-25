@@ -1,5 +1,8 @@
 package com.githubrepolister.server.models;
 
+import lombok.NoArgsConstructor;
+
+@NoArgsConstructor(force = true)
 public class GitHubRepoOwner {
     private final String login;
 
@@ -10,5 +13,4 @@ public class GitHubRepoOwner {
     public String getLogin() {
         return login;
     }
-
 }
