@@ -1,15 +1,17 @@
 package com.githubrepolister.server.controller;
 
+import com.githubrepolister.server.models.GitHubRepo;
 import com.githubrepolister.server.service.GitHubRepoListerService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @Validated
-@RequestMapping("/github")
+@RequestMapping("/api/github")
 @CrossOrigin
 public class GitHubRepoListerController {
 
@@ -20,6 +22,9 @@ public class GitHubRepoListerController {
         this.gitHubRepoListerService = gitHubRepoListerService;
     }
 
-
-
+    @GetMapping("/userRepos/{username}")
+    public ResponseEntity<List<GitHubRepo>> getUserRepos(@PathVariable String username) {
+        List<GitHubRepo> repos = gitHubRepoListerService.getUserRepos(username);
+        return ResponseEntity.ok(repos);
+    }
 }
