@@ -6,11 +6,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.Arrays;
@@ -40,28 +38,36 @@ public class GitHubRepoListerService {
     }
 
     public List<GitHubRepo> getUserRepos(String userName) {
-        logger.info("Fetching GitHub repositories for user: {}", userName);
+        logger.info("Received request for user: {}" + userName);
+        if (checkIfUserExists(userName)) {
 
-        HttpHeaders headers = new HttpHeaders();
-        headers.set("Authorization", "token " + githubApiToken);
 
-        ResponseEntity<GitHubRepo[]> response = restTemplate.exchange(GITHUB_API_REPOS_URL, HttpMethod.GET, new HttpEntity<>(headers), GitHubRepo[].class, userName);
-        GitHubRepo[] repos = response.getBody();
+            logger.info("Fetching GitHub repositories for user: {}", userName);
 
-        if (repos != null && repos.length > 0) {
-            List<GitHubRepo> nonForkedRepos = filteredForkedRepos(Arrays.asList(repos));
+            HttpHeaders headers = new HttpHeaders();
+            headers.set("Authorization", "token " + githubApiToken);
 
-            // Fetch branches for each non-forked repository
-            nonForkedRepos.forEach(repo -> {
-                List<GitHubRepoBranch> branches = fetchBranches(repo.getOwner().getLogin(), repo.getName());
-                repo.setBranches(branches);
-            });
-            logger.info("Fetched {} non-forked GitHub repositories for user: {}", nonForkedRepos.size(), userName);
-            return nonForkedRepos;
+            ResponseEntity<GitHubRepo[]> response = restTemplate.exchange(GITHUB_API_REPOS_URL, HttpMethod.GET, new HttpEntity<>(headers), GitHubRepo[].class, userName);
+            GitHubRepo[] repos = response.getBody();
+
+            if (repos != null && repos.length > 0) {
+                List<GitHubRepo> nonForkedRepos = filteredForkedRepos(Arrays.asList(repos));
+
+                // Fetch branches for each non-forked repository
+                nonForkedRepos.forEach(repo -> {
+                    List<GitHubRepoBranch> branches = fetchBranches(repo.getOwner().getLogin(), repo.getName());
+                    repo.setBranches(branches);
+                });
+                logger.info("Fetched {} non-forked GitHub repositories for user: {}", nonForkedRepos.size(), userName);
+                return nonForkedRepos;
+            }
+            logger.info("No repositories found for user: {}", userName);
+            throw new GitHubObjectNotFoundException(HttpStatus.NOT_FOUND, "No repositories found for user: " + userName);
         }
         logger.info("No repositories found for user: {}", userName);
-        return Collections.emptyList();
+        throw new GitHubObjectNotFoundException(HttpStatus.NOT_FOUND, "No such user: " + userName);
     }
+
 
     private List<GitHubRepo> filteredForkedRepos(List<GitHubRepo> repos) {
         return repos.stream()
@@ -80,4 +86,14 @@ public class GitHubRepoListerService {
         logger.info("Fetched {} branches for repository: {}/{}", branches.size(), owner, repo);
         return branches;
     }
+
+    private boolean checkIfUserExists(String userName) {
+        try {
+            restTemplate.getForEntity("https://api.github.com/users/" + userName, String.class);
+            return true;
+        } catch (HttpClientErrorException.NotFound exception) {
+            return false;
+        }
+    }
+
 }

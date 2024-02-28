@@ -1,6 +1,7 @@
 package com.githubrepolister.server.controller;
 
 import com.githubrepolister.server.models.GitHubRepo;
+import com.githubrepolister.server.service.GitHubObjectNotFoundException;
 import com.githubrepolister.server.service.GitHubRepoListerService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -23,10 +24,12 @@ public class GitHubRepoListerController {
     }
 
     @GetMapping("/userRepos/{username}")
-    public ResponseEntity<List<GitHubRepo>> getUserRepos(@PathVariable("username") String username) {
-        System.out.println("Received request for user: {}" + username);
-
-        List<GitHubRepo> repos = gitHubRepoListerService.getUserRepos(username);
-        return ResponseEntity.ok(repos);
+    public ResponseEntity<?> getUserRepos(@PathVariable("username") String username) {
+        try {
+            List<GitHubRepo> repos = gitHubRepoListerService.getUserRepos(username);
+            return ResponseEntity.ok(repos);
+        } catch (GitHubObjectNotFoundException exception) {
+            return ResponseEntity.status(exception.getStatus()).body(exception.getMessage());
+        }
     }
 }
